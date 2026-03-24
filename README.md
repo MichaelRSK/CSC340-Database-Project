@@ -25,7 +25,6 @@ Interactive GUI blueprints for the Store Manager application. All screens are de
 /blueprints/       → GUI mockup images (PNG exports per screen)
 /docs/             → Activity3_Blueprints.pdf
 README.md          → this file
-store_gui_blueprints_activity3.html  → interactive blueprint file
 ```
 
 ---
@@ -111,14 +110,4 @@ Dashboard
 
 ---
 
-## Commit Message Log (examples)
 
-```
-Initial commit: added dashboard and navigation blueprint
-Added products and categories screen layouts
-Added inventory and receive stock screens
-Added customers, customer details screen
-Added orders, new order, payment, confirmation flow
-Added returns screen and finalized transitions
-Finalized GUI blueprints for Activity 3 submission
-```
