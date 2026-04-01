@@ -28,6 +28,19 @@ def get_connection():
         raise ConnectionError(f"Could not connect to database: {exc}") from exc
 
 
+def count_users() -> int:
+    """Return total number of rows in Users."""
+    query = "SELECT COUNT(*) FROM Users"
+    connection = get_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            row = cursor.fetchone()
+            return int(row[0]) if row else 0
+    finally:
+        connection.close()
+
+
 def get_user(username: str) -> dict[str, Any] | None:
     """Fetch one user by username."""
     query = """
