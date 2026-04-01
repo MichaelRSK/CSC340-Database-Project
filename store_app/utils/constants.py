@@ -1,0 +1,11 @@
+"""App-wide constants."""
+
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 800
+PRIMARY_COLOR = "#2C3E50"
+ACTION_COLOR = "#3498DB"
+ALERT_COLOR = "#E74C3C"
+BACKGROUND_COLOR = "#F5F5F5"
+
+# Used by auth.SessionTimer and UI event handlers.
+INACTIVITY_TIMEOUT_SECONDS = 15 * 60
