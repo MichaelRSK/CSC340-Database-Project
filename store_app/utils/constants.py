@@ -17,3 +17,4 @@ USERNAME_MAX_LENGTH = 50
 
 # Used by auth.SessionTimer and UI event handlers.
 INACTIVITY_TIMEOUT_SECONDS = 15 * 60
+INACTIVITY_WARNING_SECONDS = 60
