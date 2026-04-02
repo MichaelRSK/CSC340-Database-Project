@@ -11,6 +11,7 @@ from store_app.auth import SessionTimer, seed_manager_account
 from store_app.ui.employee_frame import EmployeeDashboardFrame
 from store_app.ui.login_frame import LoginFrame
 from store_app.ui.manager_frame import ManagerDashboardFrame
+from store_app.ui.owner_frame import OwnerDashboardFrame
 from store_app.utils.constants import (
     BACKGROUND_COLOR,
     INACTIVITY_TIMEOUT_SECONDS,
@@ -170,7 +171,7 @@ def main() -> None:
     def on_login_success(user: dict[str, Any]) -> None:
         nonlocal current_user, session_timer
         role = user.get("role")
-        if role not in ("manager", "employee"):
+        if role not in ("owner", "manager", "employee"):
             messagebox.showerror("Sign in", "Unknown role; cannot open dashboard.")
             return
 
@@ -180,7 +181,13 @@ def main() -> None:
         root.title("Store Manager — Dashboard")
         _clear_children(container)
 
-        if role == "manager":
+        if role == "owner":
+            OwnerDashboardFrame(
+                container,
+                user=user,
+                on_logout=on_logout,
+            ).pack(fill=tk.BOTH, expand=True)
+        elif role == "manager":
             ManagerDashboardFrame(
                 container,
                 user=user,

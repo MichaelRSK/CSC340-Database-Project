@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import tkinter as tk
 from collections.abc import Callable
+from tkinter import messagebox, ttk
 from typing import Any
 
+from store_app.auth import create_account
 from store_app.utils.constants import (
     ACTION_COLOR,
     ALERT_COLOR,
@@ -15,6 +17,7 @@ from store_app.utils.constants import (
     FONT_SMALL,
     PRIMARY_COLOR,
 )
+from store_app.utils.validator import validate_new_account
 
 OnLogout = Callable[[], None]
 
@@ -28,6 +31,7 @@ SECTION_PLACEHOLDERS: dict[str, str] = {
     "customers": "Customer list and details will appear here.",
     "orders": "Orders list, new order, and payment flows will appear here.",
     "returns": "Returns logging and tracking will appear here.",
+    "users": "Owner user administration and role management will appear here.",
 }
 
 
@@ -50,6 +54,7 @@ class DashboardFrame(tk.Frame):
         self._on_logout = on_logout
         self._nav_buttons: dict[str, tk.Button] = {}
         self._active_key: str | None = None
+        self._role = str(user.get("role", "")).lower()
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
@@ -140,6 +145,7 @@ class DashboardFrame(tk.Frame):
         wrap_bg = "#E8EAED"
         header = tk.Frame(self._content_wrap, bg=wrap_bg)
         header.grid(row=0, column=0, sticky="ew", padx=32, pady=(32, 8))
+        header.columnconfigure(0, weight=1)
         title = tk.Label(
             header,
             textvariable=self._title_var,
@@ -148,7 +154,23 @@ class DashboardFrame(tk.Frame):
             bg=wrap_bg,
             anchor="w",
         )
-        title.pack(anchor="w")
+        title.grid(row=0, column=0, sticky="w")
+        if self._role in {"owner", "manager"}:
+            create_btn = tk.Button(
+                header,
+                text="Create User",
+                font=FONT_BUTTON,
+                fg="#FFFFFF",
+                bg=ACTION_COLOR,
+                activebackground=PRIMARY_COLOR,
+                activeforeground="#FFFFFF",
+                relief=tk.FLAT,
+                padx=14,
+                pady=6,
+                cursor="hand2",
+                command=self._open_create_user_dialog,
+            )
+            create_btn.grid(row=0, column=1, sticky="e")
         tk.Label(
             header,
             text="Placeholder — charts and lists are added in later milestones.",
@@ -156,7 +178,7 @@ class DashboardFrame(tk.Frame):
             fg="#5D6D7E",
             bg=wrap_bg,
             anchor="w",
-        ).pack(anchor="w", pady=(4, 0))
+        ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 0))
 
         body_frame = tk.Frame(
             self._content_wrap,
@@ -194,3 +216,135 @@ class DashboardFrame(tk.Frame):
         label = next((lbl for k, lbl in self._nav_items if k == key), key.title())
         self._title_var.set(label)
         self._body_var.set(SECTION_PLACEHOLDERS.get(key, "This section is coming soon."))
+
+    def _open_create_user_dialog(self) -> None:
+        """Allow owner/manager to create accounts from dashboard."""
+        if self._role not in {"owner", "manager"}:
+            messagebox.showerror("Create User", "You do not have permission to create users.")
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Create user")
+        dialog.configure(bg=BACKGROUND_COLOR)
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+        dialog.resizable(False, False)
+
+        pad = tk.Frame(dialog, bg=BACKGROUND_COLOR, padx=28, pady=24)
+        pad.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            pad,
+            text="Create account",
+            font=("Segoe UI", 14, "bold"),
+            fg=PRIMARY_COLOR,
+            bg=BACKGROUND_COLOR,
+        ).pack(anchor="w", pady=(0, 12))
+
+        err_var = tk.StringVar()
+
+        def row(label: str, show: str | None = None) -> tk.Entry:
+            tk.Label(pad, text=label, font=FONT_BODY, fg=PRIMARY_COLOR, bg=BACKGROUND_COLOR).pack(
+                anchor="w", pady=(10, 4)
+            )
+            ent = tk.Entry(
+                pad,
+                show=show,
+                width=36,
+                font=FONT_BODY,
+                fg=PRIMARY_COLOR,
+                bg="#FFFFFF",
+                relief=tk.FLAT,
+                highlightthickness=1,
+                highlightbackground="#CCCCCC",
+            )
+            ent.pack(anchor="w")
+            return ent
+
+        u_ent = row("Username")
+        p_ent = row("Password", show="•")
+        c_ent = row("Confirm password", show="•")
+
+        tk.Label(pad, text="Role", font=FONT_BODY, fg=PRIMARY_COLOR, bg=BACKGROUND_COLOR).pack(
+            anchor="w", pady=(10, 4)
+        )
+        role_var = tk.StringVar(value="employee")
+        role_values = ["employee", "manager"] if self._role == "manager" else ["employee", "manager", "owner"]
+        role_combo = ttk.Combobox(
+            pad,
+            textvariable=role_var,
+            values=role_values,
+            state="readonly",
+            width=18,
+            font=FONT_BODY,
+        )
+        role_combo.pack(anchor="w")
+        role_combo.current(0)
+
+        err_lbl = tk.Label(
+            pad,
+            textvariable=err_var,
+            font=FONT_SMALL,
+            fg=ALERT_COLOR,
+            bg=BACKGROUND_COLOR,
+            wraplength=360,
+            justify="left",
+        )
+        err_lbl.pack(anchor="w", pady=(12, 0))
+
+        def submit() -> None:
+            err_var.set("")
+            username = u_ent.get()
+            password = p_ent.get()
+            confirm = c_ent.get()
+            ok, msg = validate_new_account(username, password, confirm)
+            if not ok:
+                err_var.set(msg or "Invalid input.")
+                return
+
+            role = role_var.get().strip().lower()
+            if role not in role_values:
+                err_var.set("Select a valid role.")
+                return
+
+            try:
+                create_account(username.strip(), password, role)
+            except ValueError as exc:
+                err_var.set(str(exc))
+                return
+            except (ConnectionError, OSError) as exc:
+                err_var.set(str(exc))
+                return
+
+            messagebox.showinfo("Account created", f"Created {role} account for '{username.strip()}'.")
+            dialog.destroy()
+
+        btns = tk.Frame(pad, bg=BACKGROUND_COLOR)
+        btns.pack(pady=(20, 0))
+        tk.Button(
+            btns,
+            text="Create",
+            font=FONT_BUTTON,
+            fg="#FFFFFF",
+            bg=ACTION_COLOR,
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            command=submit,
+        ).pack(side=tk.LEFT, padx=(0, 8))
+        tk.Button(
+            btns,
+            text="Cancel",
+            font=FONT_BODY,
+            fg=PRIMARY_COLOR,
+            bg=BACKGROUND_COLOR,
+            relief=tk.FLAT,
+            padx=16,
+            pady=8,
+            command=dialog.destroy,
+        ).pack(side=tk.LEFT)
+
+        dialog.update_idletasks()
+        x = self.winfo_rootx() + (self.winfo_width() // 2) - (dialog.winfo_width() // 2)
+        y = self.winfo_rooty() + (self.winfo_height() // 2) - (dialog.winfo_height() // 2)
+        dialog.geometry(f"+{x}+{y}")

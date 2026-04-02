@@ -48,8 +48,8 @@ def verify_login(username: str, password: str) -> dict[str, Any] | None:
 
 def create_account(username: str, password: str, role: str) -> int:
     """Create a user account with hashed password."""
-    if role not in {"manager", "employee"}:
-        raise ValueError("Role must be 'manager' or 'employee'.")
+    if role not in {"owner", "manager", "employee"}:
+        raise ValueError("Role must be 'owner', 'manager', or 'employee'.")
     if not username or not password:
         raise ValueError("Username and password are required.")
 

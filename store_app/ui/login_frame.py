@@ -275,6 +275,12 @@ class LoginFrame(tk.Frame):
         role_frame.pack(anchor="w")
         ttk.Radiobutton(
             role_frame,
+            text="Owner",
+            value="owner",
+            variable=role_var,
+        ).pack(side=tk.LEFT, padx=(0, 16))
+        ttk.Radiobutton(
+            role_frame,
             text="Manager",
             value="manager",
             variable=role_var,
@@ -304,7 +310,7 @@ class LoginFrame(tk.Frame):
                 err_var.set(msg or "Invalid input.")
                 return
             role = role_var.get()
-            if role not in ("manager", "employee"):
+            if role not in ("owner", "manager", "employee"):
                 err_var.set("Select a role.")
                 return
             try:
