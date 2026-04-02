@@ -12,6 +12,7 @@ from store_app.utils.constants import (
     BACKGROUND_COLOR,
     FONT_BODY,
     FONT_BUTTON,
+    FONT_SMALL,
     PRIMARY_COLOR,
 )
 
@@ -54,7 +55,8 @@ class DashboardFrame(tk.Frame):
         self.rowconfigure(0, weight=1)
 
         self._build_sidebar()
-        self._content_wrap = tk.Frame(self, bg=BACKGROUND_COLOR)
+        # Slightly darker than BACKGROUND_COLOR so the white content card reads as a distinct panel.
+        self._content_wrap = tk.Frame(self, bg="#E8EAED")
         self._content_wrap.grid(row=0, column=1, sticky="nsew", padx=(0, 0), pady=0)
         self._content_wrap.columnconfigure(0, weight=1)
         self._content_wrap.rowconfigure(1, weight=1)
@@ -80,10 +82,10 @@ class DashboardFrame(tk.Frame):
             bg=PRIMARY_COLOR,
             anchor="w",
             padx=20,
-            pady=(24, 4),
         )
 
-        brand.pack(fill=tk.X)
+        # Label's pady= must be a single value; use pack() for asymmetric vertical padding.
+        brand.pack(fill=tk.X, pady=(24, 4))
         user_label = tk.Label(
             sidebar,
             text=f"Signed in as\n{self._user.get('username', '')}",
@@ -135,19 +137,33 @@ class DashboardFrame(tk.Frame):
         logout_btn.pack(side=tk.BOTTOM, fill=tk.X, padx=12, pady=24)
 
     def _build_content_shell(self) -> None:
-        header = tk.Frame(self._content_wrap, bg=BACKGROUND_COLOR)
+        wrap_bg = "#E8EAED"
+        header = tk.Frame(self._content_wrap, bg=wrap_bg)
         header.grid(row=0, column=0, sticky="ew", padx=32, pady=(32, 8))
         title = tk.Label(
             header,
             textvariable=self._title_var,
             font=("Segoe UI", 20, "bold"),
             fg=PRIMARY_COLOR,
-            bg=BACKGROUND_COLOR,
+            bg=wrap_bg,
             anchor="w",
         )
         title.pack(anchor="w")
+        tk.Label(
+            header,
+            text="Placeholder — charts and lists are added in later milestones.",
+            font=FONT_SMALL,
+            fg="#5D6D7E",
+            bg=wrap_bg,
+            anchor="w",
+        ).pack(anchor="w", pady=(4, 0))
 
-        body_frame = tk.Frame(self._content_wrap, bg="#FFFFFF", highlightbackground="#DDDDDD", highlightthickness=1)
+        body_frame = tk.Frame(
+            self._content_wrap,
+            bg="#FFFFFF",
+            highlightbackground="#C5CCD3",
+            highlightthickness=1,
+        )
         body_frame.grid(row=1, column=0, sticky="nsew", padx=32, pady=(8, 32))
         body_frame.columnconfigure(0, weight=1)
         body_frame.rowconfigure(0, weight=1)
@@ -159,7 +175,7 @@ class DashboardFrame(tk.Frame):
             inner,
             textvariable=self._body_var,
             font=FONT_BODY,
-            fg=PRIMARY_COLOR,
+            fg="#34495E",
             bg="#FFFFFF",
             anchor="nw",
             justify=tk.LEFT,
